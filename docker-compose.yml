@@ -23,15 +23,15 @@ services:
 
   # ── Prefect ───────────────────────────────────────────────
   prefect-orion:
-    image: prefecthq/prefect:2.14.0-python3.10
-    command: prefect orion start --host 0.0.0.0
+    image: prefecthq/prefect:3-latest
+    command: prefect server start --host 0.0.0.0
     ports:
       - "4200:4200"
     volumes:
       - prefect_data:/root/.prefect
 
   prefect-worker:
-    image: prefecthq/prefect:2.14.0-python3.10
+    image: prefecthq/prefect:3-latest
     command: prefect worker start -p docker -n lab28-worker
     environment:
       PREFECT_API_URL: http://prefect-orion:4200/api
@@ -70,6 +70,10 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana_datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./monitoring/grafana_dashboard_provisioning.yml:/etc/grafana/provisioning/dashboards/dashboard.yml
+      - ./monitoring/grafana_dashboard.json:/etc/grafana/provisioning/dashboards/grafana_dashboard.json
 
   # ── API Gateway ───────────────────────────────────────────
   api-gateway:
@@ -81,6 +85,8 @@ services:
       QDRANT_URL: http://qdrant:6333
       REDIS_URL: redis://redis:6379
     depends_on: [qdrant, redis]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   prefect_data:

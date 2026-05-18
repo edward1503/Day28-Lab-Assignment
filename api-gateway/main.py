@@ -1,7 +1,7 @@
 # api-gateway/main.py
 from fastapi import FastAPI, Request
 from prometheus_fastapi_instrumentator import Instrumentator
-import httpx, os, time, langsmith
+import httpx, os, time
 
 app = FastAPI(title="AI Platform API Gateway")
 Instrumentator().instrument(app).expose(app)  # Integration 9: Prometheus
@@ -12,6 +12,9 @@ QDRANT_URL = os.environ.get("QDRANT_URL", "http://qdrant:6333")
 @app.post("/api/v1/chat")
 async def chat(request: Request):
     body = await request.json()
+    if "query" not in body:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="Missing query")
     query = body["query"]
     start = time.time()
 
